@@ -124,7 +124,3 @@ This will start:
 - **Order Service** on port `5001`
 
 ---
-
-## 📩 Contact
-For support, please reach out to the development team.
-
