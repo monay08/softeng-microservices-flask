@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: microservices_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  user_service:
+    build: ./registration
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: microservices_db
+    volumes:
+      - ./registration:/app
+
+  order_service:
+    build: ./ordering
+    ports:
+      - "5001:5001"
+    depends_on:
+      db:
+        condition: service_healthy
+      user_service:
+        condition: service_started
+    environment:
+      DB_HOST: db
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: microservices_db
+      USER_SERVICE_URL: "http://registration:5000"
+    volumes:
+      - ./ordering:/app
+
+volumes:
+  mysql_data:
